@@ -3,7 +3,7 @@
 
 // Configuraciones del proyeto
 
-define("CHARSET", "UFT-8");
+define("CHARSET", "UTF-8");
 header("Content-Type: text/html; charset=UTF-8;");
 header("Access-Control-Allow-Origin: *");
 date_default_timezone_set("UTC");
@@ -107,52 +107,81 @@ if ($_SERVER["REQUEST_METHOD"] == "GET") {
 
 // ------------------------------- [POST] AGREGAR UN NUEVO USUARIO ------------------------------------ //
 
+
 if ($_SERVER["REQUEST_METHOD"] == "POST") {
-    // Decodifica los datosde JSON recibidos
+    // Decodifica los datos de JSON recibidos
     $data = json_decode(file_get_contents("php://input"), true);
 
     // Verifica si el quest es para ingresar un usuario
     if ($data["quest"] == "ingresar_usuario") {
-        // Asignacion de variables
-        $nombre = isset($data["nombre"])
-            ? $con->real_escape_string($data["nombre"])
-            : "";
-        $usuario = isset($data["usuario"])
-            ? $con->real_escape_string($data["usuario"])
-            : "";
-        $contrasena = isset($data["contrasena"])
-            ? $con->real_escape_string($data["contrasena"])
-            : "";
+        // Asignación de variables
+        $nombre = isset($data["nombre"]) ? $con->real_escape_string($data["nombre"]) : "";
+        $usuario = isset($data["usuario"]) ? $con->real_escape_string($data["usuario"]) : "";
+        $contrasena = isset($data["contrasena"]) ? $con->real_escape_string($data["contrasena"]) : "";
 
-        // Encriptar contrasena en DB.
-        $hashed_password = password_hash($contrasena, PASSWORD_DEFAULT);
+        // Iniciar con el nombre de usuario de la DB.
+        $initial_username = $usuario;
+        $new_username = $initial_username;
 
-        // Preparacion de consulta para inyectar informacion en la DB.
+        // Variable inicializada en 0
+        $i = 0;
 
-        $mysql = "INSERT INTO usuarios(nombre, usuario, contrasena) VALUES ('$nombre', '$usuario', '$hashed_password')";
+        do {
+            // Verifica si el usuario ya existe en BD
+            $user_check = "SELECT usuario FROM usuarios WHERE usuario = '$new_username'";
+            $rs = mysqli_query($con, $user_check);
+            $result_check = mysqli_num_rows($rs);
+            
+            if ($result_check > 0) {
+                // Si el usuario ya existe, incrementamos el contador y generamos un nuevo nombre de usuario
+                $i++;
+                $new_username = $initial_username . $i;
+            } else {
+                // Si no existe, salimos del bucle
+                break;
+            }
+        } while (true);
 
-        // Consulta a DB
-        $result = mysqli_query($con, $mysql);
+        if ($new_username !== $initial_username) {
+            // Si se generó un nuevo nombre de usuario
+            $response = [
+                "success" => false,
+                "alert" => "¡Ya existe un usuario con este nombre!",
+                "message" => "Intenta con este usuario generado: " . $new_username
+            ];
+        } else {
+            // Encriptar contraseña en DB
+            $hashed_password = password_hash($contrasena, PASSWORD_DEFAULT);
+            $mysql = "INSERT INTO usuarios(nombre, usuario, contrasena) VALUES ('$nombre', '$new_username', '$hashed_password')";
 
-        // Obtener el ID que genero INSERT INTO
-        $id_generado = mysqli_insert_id($con);
+            if (mysqli_query($con, $mysql)) {
+                // Obtener el ID que generó el INSERT INTO
+                $id_generado = mysqli_insert_id($con);
 
-        // Creando nuevo arreglo con los datos insertados.
+                // Crear nuevo arreglo con los datos insertados
+                $response = [
+                    "success" => true,
+                    "message" => "Usuario creado exitosamente",
+                    "id" => $id_generado,
+                    "nombre" => $nombre,
+                    "usuario" => $new_username,
+                    "contrasena" => $hashed_password,
+                ];
+            } else {
+                $response = [
+                    "success" => false,
+                    "message" => "Error al crear el usuario: " . mysqli_error($con)
+                ];
+            }
+        }
 
-        $response = [
-            "success" => true,
-            "message" => "Usuario creado exitosamente",
-            "id" => $id_generado,
-            "nombre" => $nombre,
-            "usuario" => $usuario,
-            "contrasena" => $hashed_password,
-        ];
-
+        header("HTTP/1.1 200 OK");
         // Devolver la respuesta en JSON
-
         echo json_encode($response);
     }
 }
+
+
 
 // ------------------------------- [PUT] EDITAR UN USUARIO ------------------------------------ //
 
