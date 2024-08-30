@@ -1,8 +1,7 @@
 <?php
 // -------------------- CONFIGS ----------------------------
 
-// Configuraciones del proyeto
-
+// Configuraciones del proyecto
 define("CHARSET", "UTF-8");
 header("Content-Type: text/html; charset=UTF-8;");
 header("Access-Control-Allow-Origin: *");
@@ -14,281 +13,313 @@ $fecha_actual = date("Y") . "-" . date("m") . "-" . date("d");
 
 // ------------------- CONEXION SQL-------------------------
 
-$con = mysqli_connect("localhost", "root", "");
+// mysqli_connect() Crea una conexión hacia la base de datos, donde espera el host, username y contraseña
+$con = mysqli_connect("localhost", "root", ""); // En este caso no existe contraseña en la db, por lo que se deja vacío
+
+// Validación por si falla la conexión a la DB.
 if (!$con) {
     die("Error DB connect " . mysqli_connect_error());
 }
 
+// mysqli_select_db() Selecciona la base de datos que se usa en el sistema
 mysqli_select_db($con, "usuarios2024");
 $con->set_charset("utf8");
 
 // -------------------------- PETICIONES HTTP -------------------- //
 
-// -------------------------- PETICION GET ---------------------
+$quest = isset($_REQUEST["quest"]) ? $_REQUEST["quest"] : null;
 
-// -------------------------- [GET] LISTA DE USUARIOS ALL ------------------- //
-
-// Se inicializa un nuevo Metodo HTTP [GET] donde con "==", se hace referencia al Metodo estricto
-// estricto GET
-
-// Obtener los datos del formulario
-if ($_SERVER["REQUEST_METHOD"] == "GET") {
-    // Se crea una nueva peticion [GET]
-    $quest = isset($_GET["quest"]) ? $_GET["quest"] : null;
-    // Se inicializa la variable $quest que guarda la funcion de "lista_usuarios"
-    if ($quest == "lista_usuarios") {
-        // Consulta a MYSQL
-        $mysql = "SELECT * FROM usuarios;";
-        // $result guarda y REALIZA la consulta SQL [$mysql]
-        $result = mysqli_query($con, $mysql);
-        // Ciclo IF donde condiciona a $result para traer los datos de DB en forma de array().
-        if ($result) {
-            $data = [];
-            // Ciclo While que asocia y carga las filas con la informacion de la DB.
-            while ($row = mysqli_fetch_assoc($result)) {
-                $data[] = $row;
-            }
-            // Devuelve la consulta en formato JSON.
-            echo json_encode($data);
-        } else {
-            // Si no es posible lo escrito en el if, condiciona a un error Not Found
-            header("HTTP/1.1 404 Not Found");
-            echo json_encode(["error" => "No se encontraron datos"]);
-        }
-    }
+// Determina el método de la petición HTTP
+switch ($_SERVER["REQUEST_METHOD"]) {
+    case "GET":
+        handleGetRequest($quest);
+        break;
+    case "POST":
+        handlePostRequest();
+        break;
+    case "PUT":
+        handlePutRequest();
+        break;
+    case "DELETE":
+        handleDeleteRequest();
+        break;
+    default:
+        header("HTTP/1.1 405 Method Not Allowed");
+        echo json_encode(["error" => "Método no permitido"]);
+        break;
 }
 
-// ----------------------- [GET] LISTA USUARIOS FILTRO ----------------------- //
-if ($_SERVER["REQUEST_METHOD"] == "GET") {
-    // Se crea una nueva peticion [GET]
-    $quest = isset($_GET["quest"]) ? $_GET["quest"] : null;
-    if ($quest == "lista_usuarios_filtro") {
-        $letra = isset($_GET["letra"]) ? $_GET["letra"] : "";
-        $usuario = isset($_GET["usuario"]) ? $_GET["usuario"] : "";
-        $contrasena = isset($_GET["contrasena"]) ? $_GET["contrasena"] : "";
+// ------------------- FUNCIONES DE MANEJO DE PETICIONES ------------------- //
 
-        // Consulta a MySQL para buscar los usuarios que coincidan con la búsqueda
-        $mysql = "SELECT * FROM usuarios WHERE (id like '%$letra%' OR nombre like '%$letra%' OR usuario like '%$letra%' OR contrasena like '%$letra%') AND usuario = '$usuario'";
-        $result = mysqli_query($con, $mysql);
+function handleGetRequest($quest) {
+    global $con;
 
-        if ($result && mysqli_num_rows($result) > 0) {
-            $data = [];
-            while ($row = mysqli_fetch_assoc($result)) {
-                $db_password = $row["contrasena"];
-
-                // Si es un hash, usar password_verify
-                if (password_verify($contrasena, $db_password)) {
-                    $data = $row; // Contraseña correcta
-                    break; 
-                } elseif ($contrasena === $db_password) {
-                    $data = $row;
-                    break; 
+    switch ($quest) {
+        case "lista_usuarios":
+            $mysql = "SELECT * FROM usuarios;";
+            $result = mysqli_query($con, $mysql);
+            if ($result) {
+                $data = [];
+                while ($row = mysqli_fetch_assoc($result)) {
+                    $data[] = $row;
                 }
-            }
-
-            if (!empty($data)) {
-                // Retornar datos del usuario
                 echo json_encode($data);
             } else {
-                // Si no hay coincidencias de usuario y contraseña
-                header("HTTP/1.1 401 Unauthorized");
-                echo json_encode([
-                    "error" => "Usuario o contraseña incorrectos",
-                ]);
+                header("HTTP/1.1 404 Not Found");
+                echo json_encode(["error" => "No se encontraron datos"]);
             }
-        } else {
-            // Si no se encuentra ningún usuario que coincida con la búsqueda
-            header("HTTP/1.1 404 Not Found");
-            echo json_encode(["error" => "Usuario no encontrado"]);
-        }
+            break;
+
+        case "lista_usuarios_filtro":
+            $letra = isset($_GET["letra"]) ? $_GET["letra"] : "";
+            $usuario = isset($_GET["usuario"]) ? $_GET["usuario"] : "";
+            $contrasena = isset($_GET["contrasena"]) ? $_GET["contrasena"] : "";
+
+            $mysql = "SELECT * FROM usuarios WHERE (id LIKE '%$letra%' OR nombre LIKE '%$letra%' OR usuario LIKE '%$letra%' OR contrasena LIKE '%$letra%') AND usuario = '$usuario'";
+            $result = mysqli_query($con, $mysql);
+
+            if ($result && mysqli_num_rows($result) > 0) {
+                $data = [];
+                while ($row = mysqli_fetch_assoc($result)) {
+                    $db_password = $row["contrasena"];
+                    if (password_verify($contrasena, $db_password)) {
+                        $data = $row;
+                        break;
+                    }
+                }
+                if (!empty($data)) {
+                    echo json_encode($data);
+                } else {
+                    header("HTTP/1.1 401 Unauthorized");
+                    echo json_encode(["error" => "Usuario o contraseña incorrectos"]);
+                }
+            } else {
+                header("HTTP/1.1 404 Not Found");
+                echo json_encode(["error" => "Usuario no encontrado"]);
+            }
+            break;
+
+        default:
+            header("HTTP/1.1 400 Bad Request");
+            echo json_encode(["error" => "Petición GET inválida"]);
+            break;
     }
 }
 
-
-// ------------------------------- [POST] AGREGAR UN NUEVO USUARIO ------------------------------------ //
-
-
-if ($_SERVER["REQUEST_METHOD"] == "POST") {
-    // Decodifica los datos de JSON recibidos
+function handlePostRequest() {
+    global $con;
     $data = json_decode(file_get_contents("php://input"), true);
 
-    // Verifica si el quest es para ingresar un usuario
-    if ($data["quest"] == "ingresar_usuario") {
-        // Asignación de variables
-        $nombre = isset($data["nombre"]) ? $con->real_escape_string($data["nombre"]) : "";
-        $usuario = isset($data["usuario"]) ? $con->real_escape_string($data["usuario"]) : "";
-        $contrasena = isset($data["contrasena"]) ? $con->real_escape_string($data["contrasena"]) : "";
+    switch ($data["quest"]) {
+        case "ingresar_usuario":
+            $nombre = isset($data["nombre"]) ? $con->real_escape_string($data["nombre"]) : "";
+            $usuario = isset($data["usuario"]) ? $con->real_escape_string($data["usuario"]) : "";
+            $contrasena = isset($data["contrasena"]) ? $con->real_escape_string($data["contrasena"]) : "";
 
-        // Iniciar con el nombre de usuario de la DB.
-        $initial_username = $usuario;
-        $new_username = $initial_username;
+            $initial_username = $usuario;
+            $new_username = $initial_username;
+            $i = 0;
 
-        // Variable inicializada en 0
-        $i = 0;
+            do {
+                $user_check = "SELECT usuario FROM usuarios WHERE usuario = '$new_username'";
+                $rs = mysqli_query($con, $user_check);
+                $result_check = mysqli_num_rows($rs);
+                
+                if ($result_check > 0) {
+                    $i++;
+                    $new_username = $initial_username . $i;
+                } else {
+                    break;
+                }
+            } while (true);
 
-        do {
-            // Verifica si el usuario ya existe en BD
-            $user_check = "SELECT usuario FROM usuarios WHERE usuario = '$new_username'";
-            $rs = mysqli_query($con, $user_check);
-            $result_check = mysqli_num_rows($rs);
-            
-            if ($result_check > 0) {
-                // Si el usuario ya existe, incrementamos el contador y generamos un nuevo nombre de usuario
-                $i++;
-                $new_username = $initial_username . $i;
-            } else {
-                // Si no existe, salimos del bucle
-                break;
-            }
-        } while (true);
-
-        if ($new_username !== $initial_username) {
-            // Si se generó un nuevo nombre de usuario
-            $response = [
-                "success" => false,
-                "alert" => "¡Ya existe un usuario con este nombre!",
-                "message" => "Intenta con este usuario generado: " . $new_username
-            ];
-        } else {
-            // Encriptar contraseña en DB
-            $hashed_password = password_hash($contrasena, PASSWORD_DEFAULT);
-            $mysql = "INSERT INTO usuarios(nombre, usuario, contrasena) VALUES ('$nombre', '$new_username', '$hashed_password')";
-
-            if (mysqli_query($con, $mysql)) {
-                // Obtener el ID que generó el INSERT INTO
-                $id_generado = mysqli_insert_id($con);
-
-                // Crear nuevo arreglo con los datos insertados
-                $response = [
-                    "success" => true,
-                    "message" => "Usuario creado exitosamente",
-                    "id" => $id_generado,
-                    "nombre" => $nombre,
-                    "usuario" => $new_username,
-                    "contrasena" => $hashed_password,
-                ];
-            } else {
+            if ($new_username !== $initial_username) {
                 $response = [
                     "success" => false,
-                    "message" => "Error al crear el usuario: " . mysqli_error($con)
+                    "alert" => "¡Ya existe un usuario con este nombre!",
+                    "message" => "Intenta con este usuario generado: " . $new_username
                 ];
-            }
-        }
+            } else {
+                $hashed_password = password_hash($contrasena, PASSWORD_DEFAULT);
+                $mysql = "INSERT INTO usuarios(nombre, usuario, contrasena) VALUES ('$nombre', '$new_username', '$hashed_password')";
 
-        header("HTTP/1.1 200 OK");
-        // Devolver la respuesta en JSON
-        echo json_encode($response);
+                if (mysqli_query($con, $mysql)) {
+                    $id_generado = mysqli_insert_id($con);
+                    $response = [
+                        "success" => true,
+                        "message" => "Usuario creado exitosamente",
+                        "id" => $id_generado,
+                        "nombre" => $nombre,
+                        "usuario" => $new_username,
+                        "contrasena" => $hashed_password,
+                    ];
+                } else {
+                    $response = [
+                        "success" => false,
+                        "message" => "Error al crear el usuario: " . mysqli_error($con)
+                    ];
+                }
+            }
+            
+            header("HTTP/1.1 200 OK");
+            echo json_encode($response);
+            break;
+
+        default:
+            header("HTTP/1.1 400 Bad Request");
+            echo json_encode(["error" => "Petición POST inválida"]);
+            break;
     }
 }
 
-
-
-// ------------------------------- [PUT] EDITAR UN USUARIO ------------------------------------ //
-
-if ($_SERVER["REQUEST_METHOD"] == "PUT") {
+function handlePutRequest() {
+    global $con;
     $data = json_decode(file_get_contents("php://input"), true);
 
     if (isset($data["quest"]) && $data["quest"] == "editar_usuario") {
-        $id = isset($data["id"]) ? $con->real_escape_string($data["id"]) : "";
-        $nombre = isset($data["nombre"]) ? $con->real_escape_string($data["nombre"]) : "";
         $usuario = isset($data["usuario"]) ? $con->real_escape_string($data["usuario"]) : "";
-        $contrasena = isset($data["contrasena"]) ? $con->real_escape_string($data["contrasena"]) : "";
+        $contrasena_antigua = isset($data["contrasena_antigua"]) ? $con->real_escape_string($data["contrasena_antigua"]) : "";
+        $nombre = isset($data["nombre"]) ? $con->real_escape_string($data["nombre"]) : null;
+        $contrasena_nueva = isset($data["contrasena_nueva"]) ? $con->real_escape_string($data["contrasena_nueva"]) : null;
+        $repetir_contrasena_nueva = isset($data["repetir_contrasena_nueva"]) ? $con->real_escape_string($data["repetir_contrasena_nueva"]) : null;
 
-        $sql = "UPDATE usuarios SET 
-                nombre = '$nombre', 
-                usuario = '$usuario', 
-                contrasena = '$contrasena' 
-                WHERE id = '$id'";
-
-        $result = mysqli_query($con, $sql);
-
-        if ($result) {
-            $response = [
-                "success" => true,
-                "message" => "Usuario actualizado exitosamente",
-                "id" => $id,
-                "nombre" => $nombre,
-                "usuario" => $usuario
-            ];
-        } else {
-            $response = [
-                "success" => false,
-                "message" => "Error al actualizar el usuario: " . mysqli_error($con)
-            ];
-        }
-
-        // Devolver la respuesta en JSON
-        header('Content-Type: application/json');
-        echo json_encode($response);
-    }
-}
-
-// ------------------------- [DELETE] ELIMINAR UN USUARIO ---------------------- //
-
-if ($_SERVER["REQUEST_METHOD"] == "DELETE") {
-    $data = json_decode(file_get_contents("php://input"), true);
-
-    if (isset($data["quest"]) && $data["quest"] == "eliminar_usuario") {
-        $id = isset($data["id"]) ? $con->real_escape_string($data["id"]) : "";
-
-        if (!empty($id)) {
-            $sql = "DELETE FROM usuarios WHERE id = '$id'";
-
+        if (!empty($usuario) && !empty($contrasena_antigua)) {
+            $sql = "SELECT id, contrasena FROM usuarios WHERE usuario = '$usuario'";
             $result = mysqli_query($con, $sql);
 
-            if ($result) {
-                $response = [
-                    "success" => true,
-                    "message" => "Usuario eliminado exitosamente",
-                    "id" => $id
-                ];
+            if ($result && mysqli_num_rows($result) > 0) {
+                $user = mysqli_fetch_assoc($result);
+                $hashed_password_current = $user['contrasena'];
+
+                if (password_verify($contrasena_antigua, $hashed_password_current)) {
+                    if ($contrasena_nueva !== null && $contrasena_nueva === $repetir_contrasena_nueva) {
+                        $hashed_password = password_hash($contrasena_nueva, PASSWORD_DEFAULT);
+                    } elseif ($contrasena_nueva !== null) {
+                        $response = [
+                            "success" => false,
+                            "message" => "Las contraseñas nuevas no coinciden."
+                        ];
+                        header('Content-Type: application/json');
+                        echo json_encode($response);
+                        exit;
+                    } else {
+                        $hashed_password = $hashed_password_current;
+                    }
+
+                    if ($usuario && $usuario !== $data["usuario"]) {
+                        $check_sql = "SELECT id FROM usuarios WHERE usuario = '$usuario' AND id != " . $user['id'];
+                        $check_result = mysqli_query($con, $check_sql);
+                        if (mysqli_num_rows($check_result) > 0) {
+                            $response = [
+                                "success" => false,
+                                "message" => "El nombre de usuario ya existe."
+                            ];
+                            header('Content-Type: application/json');
+                            echo json_encode($response);
+                            exit;
+                        }
+                    }
+
+                    $update_fields = [];
+                    if ($nombre !== null) $update_fields[] = "nombre = '$nombre'";
+                    if ($hashed_password !== $hashed_password_current) $update_fields[] = "contrasena = '$hashed_password'";
+
+                    if (!empty($update_fields)) {
+                        $update_sql = "UPDATE usuarios SET " . implode(", ", $update_fields) . " WHERE usuario = '$usuario'";
+                        $update_result = mysqli_query($con, $update_sql);
+
+                        if ($update_result) {
+                            $response = [
+                                "success" => true,
+                                "message" => "Datos actualizados exitosamente"
+                            ];
+                        } else {
+                            $response = [
+                                "success" => false,
+                                "message" => "Error al actualizar los datos"
+                            ];
+                        }
+                    } else {
+                        $response = [
+                            "success" => false,
+                            "message" => "No hay cambios que realizar"
+                        ];
+                    }
+                } else {
+                    $response = [
+                        "success" => false,
+                        "message" => "Contraseña antigua incorrecta"
+                    ];
+                }
             } else {
                 $response = [
                     "success" => false,
-                    "message" => "Error al eliminar el usuario: " . mysqli_error($con)
+                    "message" => "Usuario no encontrado"
                 ];
             }
         } else {
             $response = [
                 "success" => false,
-                "message" => "ID de usuario no proporcionado"
+                "message" => "Datos insuficientes"
             ];
         }
 
-        // Devolver la respuesta en JSON
         header('Content-Type: application/json');
         echo json_encode($response);
+    } else {
+        header("HTTP/1.1 400 Bad Request");
+        echo json_encode(["error" => "Petición PUT inválida"]);
     }
 }
 
+function handleDeleteRequest() {
+    global $con;
+    $data = json_decode(file_get_contents("php://input"), true);
 
+    if (isset($data["quest"]) && $data["quest"] == "eliminar_usuario") {
+        $usuario = isset($data["usuario"]) ? $con->real_escape_string($data["usuario"]) : "";
+        $contrasena = isset($data["contrasena"]) ? $con->real_escape_string($data["contrasena"]) : "";
 
+        $sql = "SELECT contrasena FROM usuarios WHERE usuario = '$usuario'";
+        $result = mysqli_query($con, $sql);
 
+        if ($result && mysqli_num_rows($result) > 0) {
+            $user = mysqli_fetch_assoc($result);
+            $hashed_password = $user["contrasena"];
 
+            if (password_verify($contrasena, $hashed_password)) {
+                $delete_sql = "DELETE FROM usuarios WHERE usuario = '$usuario'";
+                $delete_result = mysqli_query($con, $delete_sql);
 
+                if ($delete_result) {
+                    $response = [
+                        "success" => true,
+                        "message" => "Usuario eliminado exitosamente"
+                    ];
+                } else {
+                    $response = [
+                        "success" => false,
+                        "message" => "Error al eliminar el usuario"
+                    ];
+                }
+            } else {
+                $response = [
+                    "success" => false,
+                    "message" => "Contraseña incorrecta"
+                ];
+            }
+        } else {
+            $response = [
+                "success" => false,
+                "message" => "Usuario no encontrado"
+            ];
+        }
 
-// -------------------------- PETICION GET ---------------------
-
-// Selecciona todos los campos de la Tabla Usuarios
-// $sql = "SELECT * FROM usuarios";
-
-// Realiza la consulta a la db argumentando la conexion y la consula $sql
-//$result = mysqli_query($con, $sql);
-
-// Se obtienen las filas de la tabla Usuarios solo si es mayor a 0, de lo contrario imprime 0 results.
-//if (mysqli_num_rows($result) > 0) {
-// Ciclo While para obtener la tabla Usuarios como un Array.
-//while($request = mysqli_fetch_assoc($result)) {
-// Imprime los campos de los usuarios exceptuando la contrasena por seguridad.
-//echo "| " . $request["id"]. " | " . "| ". $request["nombre"]. " | ".  " | " . $request["usuario"] . " | " . "\n" ;
-//  }
-//} else {
-//echo "0 results";
-//}
-
-// $request = mysqli_num_rows($result) > 0 ? mysqli_query($con, $sql) : null;
-
-// $request = mysqli_fetch_assoc($result);
-//     echo $request["id"]. " " . $request["nombre"]. " " . $request["usuario"];
-
+        header('Content-Type: application/json');
+        echo json_encode($response);
+    } else {
+        header("HTTP/1.1 400 Bad Request");
+        echo json_encode(["error" => "Petición DELETE inválida"]);
+    }
+}
 ?>
