@@ -27,16 +27,22 @@ $request_method = $_SERVER["REQUEST_METHOD"];
 // $quest condiciona los casos en el switch case
 $quest = isset($_GET["quest"]) ? $_GET["quest"] : null;
 
+$validate_user = isset($_GET["validate_user"]) ? $_GET["validate_user"] : null;
+
+$validate_letter = isset($_GET["validate_letter"]) ? $_GET["validate_letter"] : null;
+
+
 // Inicio del switch case
 switch ($request_method) {
     case 'GET':
         switch ($quest) {
             case 'lista_usuarios':
-                $mysql = "SELECT * FROM usuarios;";
+                $mysql = "SELECT * FROM usuarios";
                 $result = mysqli_query($con, $mysql);
+
                 if ($result) {
                     $data = [];
-                    while ($row = mysqli_fetch_assoc($result)) { // 
+                    while ($row = mysqli_fetch_assoc($result)) { 
                         $data[] = $row;
                     }
                     echo json_encode($data);
@@ -44,14 +50,28 @@ switch ($request_method) {
                     header("HTTP/1.1 404 Not Found");
                     echo json_encode(["error" => "No se encontraron datos"]);
                 }
-                break;
+            break;
 
             case 'lista_usuarios_filtro':
-              $letra = isset($_GET['letra']) ? $_GET['letra'] : '';
+              $letra = isset($_GET['letra']) ? $con->real_escape_string($_GET['letra']) : '';
+
+              switch($validate_letter){
+                case (empty($letra)):
+                    header("HTTP/1.1 404 Not Found");
+                    echo json_encode([
+                        "alert" => "Ingresa un valor para el filtro letra o palabra."
+                    ]);
+                    break;
+                default:
+                    break;
+                    header("HTTP/1.1 404 Not Found");
+                    echo json_encode([
+                        "error" => "No se reconoce el caso...."
+                    ]);
+              }
               $sql = "SELECT * FROM usuarios WHERE id LIKE '%$letra%' OR nombre LIKE '%$letra%' OR usuario LIKE '%$letra%'";
-
               $rs = mysqli_query($con, $sql);
-
+              
               if($rs){
                 $data = array();
                 while($row = mysqli_fetch_assoc($rs)){
@@ -63,37 +83,63 @@ switch ($request_method) {
                 header('HTTP/1.1 404 Not Found');
                 echo json_encode(array("error" => "No se encontraron datos"));
               }
-        }
+            break;
 
-        case 'login':
-            $usuario = isset($_GET['usuario']) ? $con->real_escape_string($_GET['usuario']) : '';   
-            $contrasena = isset($_GET['contrasena']) ? $con->real_escape_string($_GET['contrasena']) : '';
+            case 'login':
+                $usuario = isset($_GET['usuario']) ? $con->real_escape_string($_GET['usuario']) : '';   
+                $contrasena = isset($_GET['contrasena']) ? $con->real_escape_string($_GET['contrasena']) : '';
 
-            if (!empty($usuario) && !empty($contrasena)) {
-                $sql = "SELECT * FROM usuarios WHERE usuario = '$usuario'";
-                $result = mysqli_query($con, $sql);
-
-                if ($result && mysqli_num_rows($result) > 0) {
-                    $user = mysqli_fetch_assoc($result);
-                    $hashed_password = $user['contrasena'];
-
-                    if (password_verify($contrasena, $hashed_password)) {
+                switch($validate_user){
+                    case (empty($usuario)):
+                        header("HTTP/1.1 404 Not Found");
                         echo json_encode([
-                            "success" => true,
-                            "message" => "Login exitoso",
-                            "user" => $user
+                            "alert" => "El usuario no fue ingresado."
                         ]);
-                    } else {
-                        header('HTTP/1.1 401 Unauthorized');
-                        echo json_encode(["error" => "Credenciales inválidas"]);
-                    }
-                } else {
-                    header('HTTP/1.1 404 Not Found');
-                    echo json_encode(["error" => "Usuario no encontrado"]);
+                        break;
+                    case (empty($contrasena)):
+                        header("HTTP/1.1 404 Not Found");
+                        echo json_encode([
+                            "alert" => "La contrasena no fue ingresada. "
+                        ]);
+                        break;
+                    default:
+                        break;
+                        header("HTTP/1.1 404 Not Found");
+                        echo json_encode(["error" => "No se encontro el caso."]);
+
                 }
-            } 
-        break;
-    
+
+                if (!empty($usuario) && !empty($contrasena)) {
+                    $sql = "SELECT * FROM usuarios WHERE usuario = '$usuario'";
+                    $result = mysqli_query($con, $sql);
+
+                    if ($result && mysqli_num_rows($result) > 0) {
+                        $user = mysqli_fetch_assoc($result);
+                        $hashed_password = $user['contrasena'];
+
+                        if (password_verify($contrasena, $hashed_password)) {
+                            echo json_encode([
+                                "success" => true,
+                                "message" => "Login exitoso",
+                                "user" => $user
+                            ]);
+                        } else {
+                            header('HTTP/1.1 401 Unauthorized');
+                            echo json_encode(["error" => "Credenciales inválidas"]);
+                        }
+                    } else {
+                        header('HTTP/1.1 404 Not Found');
+                        echo json_encode(["error" => "Usuario no encontrado"]);
+                    }
+                } 
+            break;
+            default:
+                header("HTTP/1.1 404 Not Found");
+                echo json_encode(["error" => "Caso no encontrado"]);
+            break;
+    }
+    break;
+
     case 'POST':
         $data = json_decode(file_get_contents("php://input"), true);
         $nombre = isset($data['nombre']) ? $con->real_escape_string($data['nombre']) : '';
