@@ -182,90 +182,45 @@ switch ($request_method) {
 
         case 'PUT':
             $data = json_decode(file_get_contents("php://input"), true);
+            $usuario = $con->real_escape_string($data['usuario'] ?? '');
+            $contrasena = $con->real_escape_string($data['contrasena'] ?? '');
         
-            // Escapamos las variables
-            $usuario = $con->real_escape_string($data['usuario'] ?? null);
-            $contrasena = $con->real_escape_string($data['contrasena'] ?? null);
-            $nombre_nuevo = $con->real_escape_string($data["nombre_nuevo"] ?? "");
-            $usuario_nuevo = $con->real_escape_string($data["usuario_nuevo"] ?? null);
-            $contrasena_antigua = $con->real_escape_string($data["contrasena_antigua"] ?? "");
-            $contrasena_nueva = $con->real_escape_string($data["contrasena_nueva"] ?? "");
-            $repetir_contrasena_nueva = $con->real_escape_string($data["repetir_contrasena_nueva"] ?? "");
-        
-            if ($usuario && $contrasena) {
-                $sql_verify = "SELECT id, contrasena FROM usuarios WHERE usuario = '$usuario'";
-                $rs_verify = mysqli_query($con, $sql_verify);
-        
-                if ($rs_verify && $rs_verify->num_rows > 0) {
-                    $user_verify = $rs_verify->fetch_assoc();
-                    $user_id = $user_verify['id'];
-                    $hashed_password_current = $user_verify['contrasena'];
-        
-                    // Verificamos la contraseña actual
-                    if (password_verify($contrasena, $hashed_password_current)) {
-                        // Cambiar la contraseña si se proporciona la antigua y las nuevas coinciden
-                        if ($contrasena_antigua && password_verify($contrasena_antigua, $hashed_password_current)) {
-                            if ($contrasena_nueva && $contrasena_nueva === $repetir_contrasena_nueva) {
-                                $hashed_password = password_hash($contrasena_nueva, PASSWORD_DEFAULT);
-                            } else if ($contrasena_nueva !== $repetir_contrasena_nueva) {
-                                echo json_encode(["success" => false, "message" => "Las contraseñas no coinciden"], JSON_PRETTY_PRINT);
-                                exit();
-                            }
-                        } else {
-                            $hashed_password = $hashed_password_current;
-                        }
-        
-                        // Validar y generar nuevo usuario si se cambia
-                        if ($usuario_nuevo && $usuario_nuevo !== $usuario) {
-                            $usuario_generado = $usuario_nuevo;
-        
-                            for ($incremento = 0; $incremento < 10; $incremento++) {
-                                $user_check = "SELECT usuario FROM usuarios WHERE usuario = '$usuario_generado'";
-                                $rs_user_check = mysqli_query($con, $user_check);
-        
-                                if (mysqli_num_rows($rs_user_check) > 0) {
-                                    $usuario_generado = $usuario_nuevo . $incremento;
-                                } else {
-                                    break;
-                                }
-                            }
-        
-                            if ($usuario_generado !== $usuario_nuevo) {
-                                echo json_encode(["success" => false, "message" => "Este usuario ya existe. Intenta con este nombre nuevo: $usuario_generado"], JSON_PRETTY_PRINT);
-                                exit();
-                            }
-                            
-                            $usuario_nuevo = $usuario_generado;
-                        }
-        
-                        // Actualización de los campos
-                        $update_fields = [];
-                        if ($nombre_nuevo) $update_fields[] = "nombre = '$nombre_nuevo'";
-                        if ($usuario_nuevo) $update_fields[] = "usuario = '$usuario_nuevo'";
-                        if ($hashed_password !== $hashed_password_current) $update_fields[] = "contrasena = '$hashed_password'";
-        
-                        if (!empty($update_fields)) {
-                            $update_sql = "UPDATE usuarios SET " . implode(", ", $update_fields) . " WHERE id = $user_id";
-                            $response_sql = mysqli_query($con, $update_sql);
-        
-                            $response = $response_sql
-                                ? ["success" => true, "message" => "Datos actualizados", "usuario" => $usuario_nuevo, "nombre" => $nombre_nuevo]
-                                : ["success" => false, "message" => "Hubo un error al actualizar sus datos."];
-                        } else {
-                            $response = ["success" => false, "message" => "No se realizaron cambios."];
-                        }
-                    } else {
-                        $response = ["success" => false, "message" => "La contraseña es incorrecta"];
-                    }
-                } else {
-                    $response = ["success" => false, "message" => "Usuario no encontrado"];
-                }
-            } else {
-                $response = ["success" => false, "message" => "Error al editar el usuario"];
+            if (!$usuario || !$contrasena) {
+                json_response(['error' => 'No se proporcionó usuario o contraseña'], 404);
             }
         
-            echo json_encode($response);
-            break;        
+            $sql = "SELECT id, contrasena FROM usuarios WHERE usuario = '$usuario'";
+            $result = mysqli_query($con, $sql);
+        
+            if ($result && mysqli_num_rows($result) > 0) {
+                $user = mysqli_fetch_assoc($result);
+                if (password_verify($contrasena, $user['contrasena'])) {
+                    $fields = [];
+                    if (!empty($data['nombre_nuevo'])) {
+                        $fields[] = "nombre = '{$con->real_escape_string($data['nombre_nuevo'])}'";
+                    }
+                    if (!empty($data['usuario_nuevo']) && $data['usuario_nuevo'] !== $usuario) {
+                        $usuario_nuevo = generate_unique_username($data['usuario_nuevo'], $con);
+                        $fields[] = "usuario = '$usuario_nuevo'";
+                    }
+                    if (!empty($data['contrasena_nueva']) && $data['contrasena_nueva'] === $data['repetir_contrasena_nueva']) {
+                        $fields[] = "contrasena = '" . password_hash($data['contrasena_nueva'], PASSWORD_DEFAULT) . "'";
+                    }
+        
+                    if (!empty($fields)) {
+                        $update_sql = "UPDATE usuarios SET " . implode(", ", $fields) . " WHERE id = {$user['id']}";
+                        $response = mysqli_query($con, $update_sql) ? ["success" => true, "message" => "Datos actualizados"] : ["success" => false, "message" => "Error al actualizar los datos"];
+                    } else {
+                        $response = ["success" => false, "message" => "No se realizaron cambios"];
+                    }
+                } else {
+                    $response = ["success" => false, "message" => "Contraseña incorrecta"];
+                }
+            } else {
+                $response = ["success" => false, "message" => "Usuario no encontrado"];
+            }
+            json_response($response);
+            break;      
 
     case 'DELETE':
         switch ($quest) {
@@ -338,3 +293,6 @@ switch ($request_method) {
         break;
 }
 ?>
+
+
+
