@@ -159,7 +159,7 @@ switch ($request_method) {
                         $row = mysqli_fetch_assoc($rs); 
 
                         if ($row['count'] == 0) { // Si la cuenta es igual a 0, entonces se genera un nuevo usuario que NO EXISTIA en DB.
-                            break; // Usuario disponible encontrado
+                            break; // Usuario disponible encontrado. Finaliza el ciclo FOR luego de encontrar un usuario disponible.
                         }
 
                         $usuario_nuevo = $usuario_base . $i; // Devuelve nombre_nuevo con el numero del final
@@ -203,163 +203,127 @@ switch ($request_method) {
             }
             break;
 
-        case 'PUT':
-            switch($quest){
-                case 'editar_usuario':
-                    $data = json_decode(file_get_contents("php://input"), true);
-        
-                    // Campos obligatorios si el usuario quiere editar su informacion
-                    $usuario = $con->real_escape_string($data['usuario'] ?? null);
-                    $contrasena = $con->real_escape_string($data['contrasena'] ?? null);
-
-                    // Campos nuevos despues de pasar la validacion
-                    $nombre_nuevo = $con->real_escape_string($data['nombre_nuevo'] ?? null); 
-                    $usuario_nuevo = $con->real_escape_string($data['usuario_nuevo'] ?? null);
-                    $contrasena_nueva = $con->real_escape_string($data['contrasena_nueva'] ?? null);
-                    $repetir_contrasena_nueva = $con->real_escape_string($data['repetir_contrasena_nueva'] ?? null);
-
-                    // Si no son ingresados el usuario o contrasena
-                    if(!$usuario || !$contrasena){
-                        header('HTTP/1.1 404 Not Found');
-                        echo json_encode([
-                            'error' => 'No se ingresó el usuario y/o contrasena'
-                        ]);
-                        break;
-                    }
-
-                    // Validaciones de caracteres
-                    if(!validar_nombre($nombre_nuevo)){
-                        header('HTTP/1.1 400 Bad Request');
-                        echo json_encode([
-                            'error' => 'El nombre solo debe contener letras y espacios'
-                        ]);
-                        break;
-                    }
-
-                    if(!validar_usuario($usuario_nuevo)){
-                        header('HTTP/1.1 400 Bad Request');
-                        echo json_encode([
-                            'error' => 'El usuario solo puede contener letras, numeros o guiones bajos'
-                        ]);
-                    }
-
-                    if(!validar_contrasena($contrasena_nueva)){
-                        header('HTTP/1.1 400 Bad Request');
-                        echo json_encode([
-                            'error' => 'La contrasena debe ser de 8 y 64 caracteres, debe contener una mayuscula, un numero y un caracter especial'
-                        ]);
-                        break;
-                    }
-                    
-                    // Condiciona el usuario y contrasena para despues ejecutar la consulta UPDATE
-                    if ($usuario && $contrasena) {
+            case 'PUT':
+                switch($quest){
+                    case 'editar_usuario':
+                        $data = json_decode(file_get_contents("php://input"), true);
+            
+                        // Campos obligatorios
+                        $usuario = $con->real_escape_string($data['usuario'] ?? null);
+                        $contrasena = $con->real_escape_string($data['contrasena'] ?? null);
+            
+                        // Campos nuevos
+                        $nombre_nuevo = $con->real_escape_string($data['nombre_nuevo'] ?? null);
+                        $usuario_nuevo = $con->real_escape_string($data['usuario_nuevo'] ?? null);
+                        $contrasena_nueva = $con->real_escape_string($data['contrasena_nueva'] ?? null);
+                        $repetir_contrasena_nueva = $con->real_escape_string($data['repetir_contrasena_nueva'] ?? null);
+            
+                        // Validaciones iniciales
+                        if (!$usuario || !$contrasena) {
+                            header('HTTP/1.1 404 Not Found');
+                            echo json_encode(['error' => 'No se ingresó el usuario y/o contrasena']);
+                            break;
+                        }
+            
+                        // Verificación del usuario y contraseña
                         $sql_verify = "SELECT id, contrasena FROM usuarios WHERE usuario = '$usuario'";
                         $rs_verify = mysqli_query($con, $sql_verify);
-                
+            
                         if ($rs_verify && $rs_verify->num_rows > 0) {
                             $user_verify = $rs_verify->fetch_assoc();
                             $user_id = $user_verify['id'];
                             $hashed_password_current = $user_verify['contrasena'];
-                
-                            // Verificamos la contraseña actual
+            
                             if (password_verify($contrasena, $hashed_password_current)) {
-                                // Cambiar la contraseña si se proporciona la antigua y las nuevas coinciden
-                                if ($contrasena && password_verify($contrasena, $hashed_password_current)) {
-                                    if ($contrasena_nueva && $contrasena_nueva === $repetir_contrasena_nueva) {
-                                        $hashed_password = password_hash($contrasena_nueva, PASSWORD_DEFAULT);
-                                    } else if ($contrasena_nueva !== $repetir_contrasena_nueva) {
-                                        echo json_encode(["success" => false, "message" => "Las contraseñas no coinciden"]);
-                                        exit();
+                                // Validar y cambiar la contraseña si es necesario
+                                if (!empty($contrasena_nueva)) {
+                                    if (!validar_contrasena_nueva($contrasena_nueva)) {
+                                        header('HTTP/1.1 400 Bad Request');
+                                        echo json_encode(['alert' => 'La contrasena debe ser de 8 a 64 caracteres, debe contener al menos una mayúscula, un número y un carácter especial.']);
+                                        break;
                                     }
-                                } else {
-                                    $hashed_password = $hashed_password_current;
+            
+                                    if ($contrasena_nueva !== $repetir_contrasena_nueva) {
+                                        header('HTTP/1.1 400 Bad Request');
+                                        echo json_encode(['success' => false, 'message' => 'Las contraseñas no coinciden']);
+                                        break;
+                                    }
+            
+                                    $hashed_password = password_hash($contrasena_nueva, PASSWORD_DEFAULT);
+                                    $fields[] = "contrasena = '$hashed_password'";
                                 }
-                
+            
                                 // Validar y generar nuevo usuario si se cambia
-                                if ($usuario_nuevo && $usuario_nuevo !== $usuario) {
+                                if (!empty($usuario_nuevo) && $usuario_nuevo !== $usuario) {
+                                    if (!validar_usuario($usuario_nuevo)) {
+                                        header('HTTP/1.1 400 Bad Request');
+                                        echo json_encode(['error' => 'El usuario solo puede contener letras, numeros o guiones bajos']);
+                                        break;
+                                    }
+            
                                     $usuario_generado = $usuario_nuevo;
-
-                                    for($i = 1; ;$i++){
+            
+                                    for ($i = 1; ; $i++) {
                                         $user_check = "SELECT usuario FROM usuarios WHERE usuario = '$usuario_generado'";
                                         $rs_user_check = mysqli_query($con, $user_check);
-    
-                                        if(mysqli_num_rows($rs_user_check) > 0){
+            
+                                        if (mysqli_num_rows($rs_user_check) > 0) {
                                             $usuario_generado = $usuario_nuevo . $i;
-                                        }else {
+                                        } else {
                                             break;
                                         }
                                     }
-                
+            
                                     if ($usuario_generado !== $usuario_nuevo) {
                                         header('HTTP/1.1 409 Conflict');
                                         echo json_encode(["success" => false, "message" => "Este usuario ya existe. Intenta con este nombre nuevo: $usuario_generado"], JSON_PRETTY_PRINT);
                                         exit();
                                     }
-                                    
+            
                                     $usuario_nuevo = $usuario_generado;
+                                    $fields[] = "usuario = '$usuario_nuevo'";
                                 }
-                
-                                // Array que almacena la informacion actualizada o no
-                                $fields = [];
-
-                                if(!empty($data['nombre_nuevo'])){
-                                    $fields[] = "nombre = '{$con->real_escape_string($data['nombre_nuevo'])}'";
+            
+                                // Actualizar nombre si es proporcionado
+                                if (!empty($nombre_nuevo)) {
+                                    if (!validar_nombre($nombre_nuevo)) {
+                                        header('HTTP/1.1 400 Bad Request');
+                                        echo json_encode(['error' => 'El nombre solo debe contener letras y espacios']);
+                                        break;
+                                    }
+                                    $fields[] = "nombre = '{$nombre_nuevo}'";
                                 }
-
-                                if(!empty($data['usuario_nuevo'])){
-                                    $fields[] = "usuario = '{$con->real_escape_string($data['usuario_nuevo'])}'";
-                                }
-                                
-                                // if ($hashed_password !== $hashed_password_current) $fields[] = "contrasena = '$hashed_password'";
-
-                                if(!empty($data['contrasena_nueva']) && $data['contrasena_nueva'] === $data['repetir_contrasena_nueva']){
-                                    $fields[] = "contrasena = '" . password_hash($data['contrasena_nueva'], PASSWORD_DEFAULT) . "'";
-                                }
-
-                                if (!empty($fields)) { // Si los campos que no son obligatorios estan vacios, entonces se conserva la informacion antes de la consulta UPDATE.
+            
+                                // Ejecutar actualización
+                                if (!empty($fields)) {
                                     $update_sql = "UPDATE usuarios SET " . implode(", ", $fields) . " WHERE id = $user_id";
                                     $response_sql = mysqli_query($con, $update_sql);
-                
-                                    $response = $response_sql
-                                        ? ["success" => true, "message" => "Datos actualizados", "usuario" => $usuario_nuevo, "nombre" => $nombre_nuevo]
-                                        : ["success" => false, "message" => "Hubo un error al actualizar sus datos."];
+            
+                                    $response = $response_sql ? [
+                                        "success" => true,
+                                        "message" => "Datos actualizados",
+                                        "usuario" => $usuario_nuevo,
+                                        "nombre" => $nombre_nuevo
+                                    ] : ["success" => false, "message" => "Hubo un error al actualizar sus datos."];
                                 } else {
                                     header('HTTP/1.1 304 Not Modified');
-                                    $response = [
-                                        "success" => false, 
-                                        "message" => "No se realizaron cambios."
-                                    ];
+                                    $response = ["success" => false, "message" => "No se realizaron cambios."];
                                 }
                             } else {
                                 header('HTTP/1.1 400 Bad Request');
-                                $response = [
-                                    "success" => false, 
-                                    "message" => "La contrasena es incorrecta"
-                                ];
+                                $response = ["success" => false, "message" => "La contrasena es incorrecta"];
                             }
                         } else {
                             header('HTTP/1.1 404 Not Found');
-                            $response = [
-                                "success" => false, 
-                                "message" => "Usuario no encontrado"
-                            ];
+                            $response = ["success" => false, "message" => "Usuario no encontrado"];
                         }
-                    } else {
-                        header('HTTP/1.1 400 Bad Request');
-                        $response = [
-                            "success" => false, 
-                            "message" => "Error al editar el usuario"
-                        ];
-                    }
-                    echo json_encode($response);
-                    break;
-                default:
-                    header('HTTP/1.1 400 Bad Request');
-                    echo json_encode([
-                        'error' => 'Quest no encontrado'
-                    ]);
-            }
-            break;
+            
+                        echo json_encode($response);
+                        break;
+                }
+            
+    
+    break;
                 
     case 'DELETE':
         switch ($quest) {
@@ -379,7 +343,7 @@ switch ($request_method) {
                     header('HTTP/1.1 400 Bad Request');
                     $response = [
                         "success" => false,
-                        "message" => "Las contraseñas no coinciden"
+                        "message" => "Las contrasenas no coinciden"
                     ];
                     echo json_encode($response);
                     break;
