@@ -256,24 +256,266 @@
 // // Ternario 
 //     // (condicion ? true : false)
 
-function haAprobadoCurso(calificaciones, examenesReprobados, faltas){
-    const calificaciones = { 
-        matematicas: 0,
-        ciencias: 0,
-        lengua: 0,
-        historia: 0,
-        arte: 0
-    }
-    let promedioMinimo = 70;
-    let promedioCursos = (matematica + ciencias + lengua + historia) / 4 ;
+// Pendiente
+// function haAprobadoCurso(calificaciones, examenesReprobados, faltas){
+//     const { matematicas, ciencias, lengua, historia, arte} = calificaciones
+//     let promedioMinimo = 70;
+//     let promedioCursos = (matematicas  + ciencias + lengua + historia) / 4 ;
     
-    if(examenesReprobados && faltas){
-        return 'Reprobado';
-    }else if (!examenesReprobados || faltas <= 2){
-        promedioMinimo = 60;
-    }else if (promedioCursos >= 90 ){
-        return arte = 100;
-    }
+//     if(examenesReprobados && faltas){
+//         return 'Reprobado';
+//     }else if (!examenesReprobados || faltas <= 2){
+//         promedioMinimo = 60;
+//     }else if (promedioCursos >= 90 ){
+//         return arte = 100;
+//     }
 
-    promedioMinimo ? 'Aprobado' : 'Reprobado';
-}
+//     promedioMinimo ? 'Aprobado' : 'Reprobado';
+// }
+
+//  --------------- Clase Encadenamiento Opcional ---------------- // 
+
+// const person = {
+//     name: 'Juan Pablo',
+//     address:  null
+// }
+
+// const city = person.address?.city; // ? Se trata de una manera de ejecutar algo con undefined si es nula
+
+// console.log(city);
+
+// --------------- Bucles: FOR, WHILE, DO-WHILE ------------------ //
+
+// FOR 
+// for(i = 0; i < 5; i++){
+//     console.log(i);
+// }
+
+// const array = [10, 20, 30, 40, 50];
+
+// for(i = 0; i < array.length; i++){
+//     console.log(array[i]);
+// }
+
+
+// WHILE 
+// let count = 0;
+
+// while(count <= 10){
+//     console.log(count);
+//     count++
+// }
+
+
+// DO-WHILE 
+
+// let count = 0;
+
+// do{
+//     console.log(count);
+//     count++
+// }while(count < 10);
+
+// Funcion para calcular la suma de los numeros del 1 al N usando un bucle 'for'
+
+// function sumaConFor(N){
+//     let suma = 0;
+
+//     for(i = 0; i <= N; i++){
+//         suma += i;
+//     }
+
+//     return suma;
+// }
+
+// function sumaConWhile(N){
+//     let suma = 0;
+
+//     let increment = 0;
+
+//     while(increment <= N){
+//         suma += increment;
+//         increment++;
+
+//     }
+//     return suma;
+// }
+
+// function sumaConDoWhile(N){
+//     let suma  = 0;
+//     let increment = 0;
+
+//     do {
+//         suma += increment;
+//         increment++;
+//     }while(increment <= N)
+
+//     return suma;
+// }
+
+// ------------------- Instrucciones de Salto: break y continue ------------------- // 
+
+// for(i = 0; i < 5; i++){
+//     if(i === 3){
+//         break; // Detiene el bucle segun la condicion que puse arriba
+//     }
+//     console.log(i);
+// }
+
+// for(i = 0; i < 5; i++){
+//     if(i === 3){
+//         continue; // Salta del bucle segun la condicion que puse arriba
+//     }
+//     console.log(i);
+// }
+
+// function encontrarNumeroImpar(arr){
+//     let numeroImpar = -1;
+//     let ejecucionesDeBucle = 0;
+
+//     for(i = 0; arr.length; i++){
+//         ejecucionesDeBucle += 1;
+//         if(arr[i] % 2 === 0){
+//             continue; // Salta de la iteracion porque encontro un numero par
+//         }else{
+//             numeroImpar = arr[i];
+//             break; // Detiene el bucle porque encontro un numero impar
+//         }
+
+//     }
+
+//     return {numeroImpar, ejecucionesDeBucle}
+
+
+// } 
+
+// ---------------- Declaracion y llamada de funciones ------------------- //
+
+// function sumar (a, b){
+//     return a + b;
+// }
+
+// function restar(a,b){
+//     return a - b;
+// }
+
+// function multiplicar(a, b){
+//     return a * b;
+// }
+
+// function dividir(a, b){
+//     return a / b;
+// }
+
+// function saludar(){
+//     console.log('Hola');
+// }
+
+// console.log(sumar(1,2));
+// saludar();
+
+// function obtenerFechaActual(){
+//     const fecha = new Date();
+//     const dia = fecha.getDay();
+//     const mes = fecha.getMonth();
+//     const anio = fecha.getFullYear();
+
+//     return `${dia}/${mes}/${anio}`;
+// }
+
+// function obtenerSaludo(){
+//     const saludos = ['Hola', 'Hello', 'Ciao', 'Bonjour'];
+//     const indice = Math.floor(Math.random() * saludar.length);
+//     return saludos[indice];
+// }
+
+// function obtenerMensajeMotivador(){
+//     const mensajes = ['Nunca te rindas', 'Nunca dejes de creer en ti mismo', 'Traza la linea de éxito'];
+//     const indice = Math.floor(Math.random() * mensajes.length);
+//     return mensajes[indice];
+// }
+
+// obtenerMensajeMotivador();
+// obtenerFechaActual();
+// obtenerSaludo();
+
+// ------------------ Ámbitos de las Variables (SCOPE)--------------- // 
+
+// const varGlobal = 'Soy una variable global'; // Ambito global
+
+// function saludarAmbito(){
+//     let variableLocal = 'Soy una variable local' // Ambito en Funcion
+//     if(variableLocal !== ''){
+//         varBloque = 'Soy una variable de bloque' // Ambito de bloque
+//         varBloque2 = 'Soy otra variable de bloque' //  Ambito de bloque
+//     }
+//     console.log(varBloque2);
+// }
+
+// saludarAmbito();
+
+
+
+
+// ----------------- PARAMETROS Y ARGUMENTOS --------------- //
+
+// function mostrarDomicilio(domicilio){
+//     return `${domicilio.calle} ${domicilio.numeroExterior} ${domicilio.codigoPostal} ${domicilio.ciudad} ${domicilio.pais}`;
+// }
+
+// const domicilioPrueba = {
+//     calle: 'Calle 2',
+//     numeroExterior: '123',
+//     codigoPostal: '12345',
+//     ciudad: 'Guatemala',
+//     pais: 'Guatemala'
+// };
+
+// mostrarDomicilio('Calle 2');
+
+// function sumar (a, b){
+//     return a + b;
+// }
+
+// function saludar(nombre){
+//     return `Hola ${nombre}`;
+// }
+
+// function esPar(numero){
+//     return numero % 2 === 0 ? true : false 
+// }
+
+// console.log(sumar(10, 20));
+// console.log(saludar('Juanito'));
+// console.log(esPar(2));
+
+// -------------- Funciones anonimas y funciones de Fecha ------------- //
+
+// function realizarOperacion (a, b, callback){ // Funcion regular 
+//     return callback(a, b);
+// }
+
+// const sumar = function (a, b){ // Esta es una funcion anonima
+//  return a + b; 
+// }
+
+// console.log (realizarOperacion(2, 3, sumar));
+
+
+// // Funciones de Flecha
+
+// const restar = (a, b) => a - b;  // Funncion de Flecha
+
+// const dividir = (a, b) => {
+//     return a / b;
+// }
+
+
+// ----------------- SECCION DOM, Document Object Model --------------- //
+
+// Es un modelo estructurado de una pagina web
+// Representa los elementos de unna pagina web
+// Es dinamico, se puede alterar
+
+// ----------------- Acceso a los elementos de un DOM ----------------- // 
+
