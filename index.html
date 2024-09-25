@@ -1,0 +1,143 @@
+<!-- <!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Acceso y Modificacion del DOM</title>
+</head>
+<body>
+    <h1>Mi Pagina Web</h1>
+    <p id="parrafo">Este es un parrafo de ejemplo.</p>
+    <span class="texto-corto">Este es un texto corto</span>
+    <form id="formulario1">
+        <input usuario="usuario">
+    </form>
+    <form id=formulario2"">
+        <input name="usuario">
+    </form>
+
+
+    <script>
+        function obtenerElementos(){
+            const h1 = document.getElementsByTagName('h1')[0];
+            h1.textContent = 'Nuevoo texto';
+            const parrafo = document.getElementById('parrafo');
+            parrafo.textContent = 'Este texto cambio';
+            const span = document.getElementsByClassName('texto-corto')[0];
+            span.textContent = 'Este texto tambien cambio'
+            const primerInput = document.getElementsByName('usuario')[0];
+            primerInput.value = 'Usuario1'
+            primerInput.type = 'text';
+            const segundoInput = document.querySelector('form#formulario2 input[name-usuario]');
+            segundoInput.value = 'Usuario2';
+            segundoInput.type = 'password';
+        }
+
+        obtenerElementos();
+    </script>
+</body>
+</html> -->
+
+<!-- <!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Acceso y Modificacion del DOM</title>
+</head>
+<body>
+    <h1>Mi Pagina Web</h1>
+    <p id="parrafo">Este es un parrafo</p>
+    <span class="texto-corto">Este es un texto corto</span>
+    <form id="formulario1">
+        <input name="usuario">
+    </form>
+    <form id="formulario2">
+        <input name="usuario">
+    </form>
+
+    <script>
+        function obtenerReferencias(){
+            document.getElementsByTagName('h1')[0].textContent = 'Hola amigos!';
+            document.getElementById('parrafo').textContent = 'Este texto cambio';
+            document.getElementsByClassName('texto-corto')[0].textContent = 'Esto es nuevo';
+            document.getElementsByName('usuario')[0].value = 'Usuario1';
+            const segundoInput = document.querySelector('form#formulario2 input[name-usuario]');
+            segundoInput.value = 'Usuario2';
+        }
+
+        obtenerReferencias();
+    </script>
+</body>
+</html> -->
+
+<!--
+
+TIPOS DE EVENTOS EN JAVASCRIPT 
+
+// ------- ---------- //
+
+Los eventos son sucesos que ocurren en el DOM 
+
+-->
+
+ 
+<!-- <!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=
+    , initial-scale=1.0">
+    <title>Document</title>
+</head>
+<body>
+    
+</body>
+</html> -->
+
+<!-- <!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+</head>
+<body>
+    <span id="counter">Contador: 0</span>
+    <button onmouseover="increment()">Aumentar</button>
+
+    <script>
+        let indice = 0;
+        function increment(){
+            const contador = document.getElementById('counter');
+            indice++;
+            contador.innerText = `Contador: ${indice}`;
+        }
+    </script>
+</body>
+</html> -->
+
+<!-- <!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ejercicio de Eventos</title>
+</head>
+<body>
+    <h1>Ejercicos de Eventos</h1>
+    <button onclick="cambiarColorDeFondo()" id="cambiarColor">
+        Click para cambiar color!
+    </button>
+
+    <script>
+        function cambiarColorDeFondo(){
+            const colores = ['red', 'blue', 'green', 'brown', 'black', 'yellow'];
+            document.body.style.backgroundColor = colores[Math.floor(Math.random() * colores.length)];
+        }
+        const changeColor = document.getElementById('cambiarColor')[0]
+    </script>
+
+
+</body>
+</html> -->
