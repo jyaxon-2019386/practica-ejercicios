@@ -517,5 +517,113 @@
 // Representa los elementos de unna pagina web
 // Es dinamico, se puede alterar
 
-// ----------------- Acceso a los elementos de un DOM ----------------- // 
+// ------------------ CREAR Y MANIPULAR ARRAYS ------------------- //
 
+// const array = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10];
+
+// array.push(11); // Agrega un valor al final del arreglo
+ 
+// array.pop(11); // Elimina un valor que esta al final del arreglo
+
+// array.splice(0, 5); // (primerValor, segundoValor) Con primerValor indica en donde inicia y en segundoValor indica cual valor se elimina
+
+// function buscarNumero(numero){
+//     return array.filter((e) => e === numero);
+// }
+
+
+// // console.log(buscarNumero(9));
+// console.log(array);
+
+
+// const tareas = [];
+
+// function agregarTareas(nuevaTarea){
+//     tareas.push(nuevaTarea);
+//     return tareas;
+// }
+
+// function eliminarTarea(indice){
+//     if(indice >= 0 && indice < tareas.length){
+//         tareas.splice(indice, 1);
+//     }
+//     return tareas;
+// }
+
+// function eliminarUltimaTarea(){
+//     tareas.pop();
+//     return tareas;
+// }
+
+// function buscarTarea(contenido){
+//     return tareas.filter(tarea => tarea.includes(contenido));
+
+// }
+
+
+// console.log(agregarTareas('Ir al supermercado'));
+// console.log(eliminarTarea(1));
+// console.log(eliminarUltimaTarea());
+// console.log(buscarTarea('Ir al supermercado'));
+
+// console.log(tareas);
+
+// -------------------- METODOS DE ARRAYS: map, reduce, for-each ------------- //
+
+// const array = [1,2,3,4,5,6,7,8,9,10];
+
+// // N tiene N valores de retorno
+// const arrayDuplicate = array.map((x) => x * 2);
+
+// // N tiene 1 valor de retorno
+// const arrayincrement = array.reduce((previo, actual) => previo + actual, 0);
+// // previo = 0, actual = 1 
+// // previo = 1, actual = 2
+// // previo = 3, actual = 3
+// // previo = 6, actual = 4
+
+
+// // N tiene 0 valores de retorno  
+// array.forEach((x, i) => {
+//     array[i] = array[i] * 2
+// });
+
+
+// console.log(array.some(x => x > 0));
+// console.log(array.every(x => x > 0));
+
+// console.log(array, arrayincrement);
+
+
+// const numeros = [1,2,3,4,5,6,7,8,9,10]; 
+
+// // const numerosDuplicados = numeros.map((x) => x * 2);
+
+// // const numerosPares = numeros.filter((x) => x % 2 === 0);
+
+// // const numerosSumar = numeros.reduce((x, y) => x + y, 0);
+
+// // const todosNumeros = numeros.forEach((x, i) => {
+// //     numeros[i] = numeros[i] * 2
+// // })
+
+// // const numerosEliminados = [...numeros];
+// // numerosEliminados.splice(4, 3);
+
+// // const agregarNumero = [...numeros];
+// // agregarNumero.push(11);
+
+// // const eliminarNumeroFinal = [...numeros];
+// // eliminarNumeroFinal.pop();
+
+// // const palabra = 'HOLA';
+// // const partirPalabra = palabra.split('');
+
+
+// // const palabras = ['Buenas', 'Tardes'];
+// // const unirPalabras =  palabras.join(' ');
+// // console.log(unirPalabras);
+
+// const numeroTres = numeros.includes(3);
+
+// console.log(numeroTres)
