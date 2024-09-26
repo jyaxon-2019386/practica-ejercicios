@@ -627,3 +627,274 @@
 // const numeroTres = numeros.includes(3);
 
 // console.log(numeroTres)
+
+// const array = [
+//     [1,2,3],
+//     [4,5,6],
+//     [7,8,9]  
+// ];
+
+// array.forEach((elemento, indice) => {
+//     elemento.forEach((elemento2, indice2) => {
+//         if(elemento2 % 2 === 0){
+//             array[indice][indice2] = elemento2 * 2;
+//         }
+//     })
+// })
+
+// console.log(array[0][2]);
+
+// console.log(array)
+
+// function encontrarCalificainMasAlta(calificacionPorAsignatura){
+//     const calificacionMasAlta = [];
+
+//     for(let i = 0; i < calificacionPorAsignatura.length; i++){
+//         let max = -1;
+//         for(let j = 0; j < calificacionPorAsignatura.length; j++){
+//             if(calificacionPorAsignatura[j][i] > max){
+//                 max = calificacionPorAsignatura[j][i];
+//             }
+//         }
+//         calificacionMasAlta.push(max);
+//     }
+
+//     return calificacionMasAlta
+// }
+
+// -------------------- CREACION Y MANIPULACION DE OBJETOS EN JS ------------------- //
+
+// const objeto = {
+//     nombre: 'Juan Pablo',
+//     edad: 18,
+//     estadoActivo: true,
+//     calificaciones: {
+//         lenguaje: 6,
+//         historia: 9,
+//         programacion: 10    
+//     },
+//     promediarCalificaciones: function(){
+//         return (this.calificaciones.lenguaje + this.calificaciones.historia + this.calificaciones.programacion) / 3;
+//     }
+// }
+
+// console.log(objeto.promediarCalificaciones());
+
+// const alumno = {
+//     nombre: 'Mario',
+//     apellido: 'Pedroza',
+//     grado: '3ero',
+//     faltas: 5,
+//     calificaciones: {
+//         matematicas: 9,
+//         historia: 3
+//     },
+//     tutores: [
+//         {
+//             nombre: 'Pedro',
+//             apellido: 'Pedroza',
+//             telefono: '555-321-345'
+//         },
+//         {
+//             nombre: 'Maria',
+//             apellido: 'Pedroza',
+//             telefono: '555-123-532'
+//         }
+//     ],
+//     hobbies: [
+//         'Codear',
+//         'Bailar',
+//         'Cocinar'
+//     ],
+//     estadoActivo: true
+// }
+
+// function mostrarDatosAlumno(){
+//     return JSON.stringify(alumno);
+// }
+
+// alumno.faltas = 10;
+
+// console.log(mostrarDatosAlumno());
+
+
+// const estudiante = {
+//     nombre: 'Juan Pablo',
+//     activo: true,
+//     edad: 20,
+//     calificaciones: [90,85,78,95,88],
+//     calcularPromedio: function(){
+//         return this.calificaciones.reduce((x, y) => x + y, 0) / this.calificaciones.length;
+//     },
+//     obtenerDescripcion: function(){
+//         return this.activo ? `Nombre: ${this.nombre}, Edad: ${this.edad}, Promedio: ${this.objeto.calcularPromedio()}` : 'Estudiante inactivo';
+//     }
+// }
+
+// function mostrarAlumno(){
+//     return JSON.stringify(estudiante);
+// }
+
+// console.log(mostrarAlumno())
+
+// ------------------ SPREAD OPERATOR Y DESTRUCCION --------------------- //
+
+// const array1 = [1,2,3,4,5];
+// const array2 = [6,7,8,9,10];
+
+// const estudiante = {
+//     calificaciones: [10,9,8,7,5],
+//     faltas: 5,
+//     nombre: 'Juan',
+// }
+
+// const persona = {
+//     nombre: 'Sebastian',
+//     edad: 25,
+//     apellido: 'Perez'
+// }
+
+// const estudiantePersona = {
+//     ...estudiante,
+//     ...persona,
+//     hibrido: true
+// }
+
+// function presentarAlumno(estudiante){
+//     const {nombre, apellido, edad, } = estudiante; 
+//     console.log(`Hola soy ${nombre} ${apellido} y tengo ${edad} anios`);
+// }
+
+// presentarAlumno(estudiantePersona);
+
+// const frutas = ['manzana', 'pera', 'uva'];
+
+// frutas.forEach(fruta => console.log(fruta));
+
+// const numeros = [1, 2, 3];
+// let suma = 0
+
+// numeros.forEach(numero => suma += numero);
+// console.log(suma)
+
+// const numeros = [1,2,3,4,5];
+
+// numeros.forEach(numero => console.log(numero))
+
+// const numeros = [3, 1, 4, 2, 5];
+
+// let numerosOrdenados = numeros.sort((x, y) => x - y);
+
+// console.log(numerosOrdenados)
+
+// const nums = [-2,4,7,8,10];
+
+// let IsNegative = nums.some(num => num > 0);
+
+// console.log(IsNegative);
+
+
+// Imprimir el array de numeros usando ForEach
+// const numeros = [1,2,3,4,5];
+
+// numeros.forEach(numero => console.log(numero));
+
+// Sumar todos los elementos del array usando ForEach
+// const numeros = [10,20,30,40,50];
+// let suma = 0;
+
+// numeros.forEach(numero => suma += numero);
+
+// console.log(suma)
+
+
+// Convertir un texto a mayusculas dentro de un Array.
+
+// const nombres = ['ana', 'jorge', 'juan'];
+
+// nombres.forEach(nombre => console.log(nombre.toUpperCase()));
+
+// -------------------- PROMESAS EN JAVASCRIPT ----------------- //
+
+// function operacionAsincrona (){
+//     return new Promise((resolve, reject) => {
+//         setTimeout(() => {
+//             const res = true;
+//             if(res){
+//                 resolve('Promise Succesfully')
+//             }else {
+//                 reject('Bad Promise');
+//             }
+//         }, 1000) // tiempo de espera para ejecutar la promesa
+//     })
+// }
+
+// console.log('Start');
+
+// operacionAsincrona()
+//     .then((result) => console.log(result))
+//     .catch((error) => console.log(error))
+//     .finally(() => console.log('Exit'))
+
+// console.log('Final');
+
+
+// --------------------- ASYNC / AWAIT --------------------- //
+
+// function hacerAlgoAsincrono(){
+//     return new Promise((resolve, reject) => {
+//         setTimeout(() => {
+//             const res = true;
+//             if(res){
+//                 resolve('Promise sucessfully');
+//             }else {
+//                 reject('Bad Promise');
+//             }
+//         }, 2000) 
+//     });
+// }
+
+// async function ejecutarTareaAsincrona(){
+//     try{
+//         console.log('Initializing');
+//         let result = await hacerAlgoAsincrono();
+//         console.log(result);
+//     }catch(error){
+//         console.log(error);
+//     }finally{
+//         console.log('Exit...');
+//     }
+// }
+
+// console.log('3');
+// ejecutarTareaAsincrona()
+// console.log('4')
+
+// --------------------- INTRODUCCION A FETCH -------------------- //
+
+// fetch ('https://jsonplaceholder.typicode.com/todos/1')
+//     .then(response => response.json())
+//     .then(data => console.log(data))
+//     .catch(error => console.log(error))
+
+// const dataToSend = {
+//     title: 'foo',
+//     body: 'bar',
+//     userId: 1
+// }
+
+// fetch('https://jsonplaceholder.typicode.com/posts', {
+//     method: 'POST',
+//     body: JSON.stringify(dataToSend),
+//     headers:{
+//         'Content-Type': 'application/json'
+//         }
+// })
+// .then(response => response.json())
+// .then(data => console.log(data))
+// .catch(error => console.error(error))
+
+// // GET -> Extraer informacion
+// // POST -> Publicar informacion
+// // PUT -> Modificar informacion existente
+// // DELETE  -> Eliminar ìnformacion existente
